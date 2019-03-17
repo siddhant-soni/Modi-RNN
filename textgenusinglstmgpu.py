@@ -1,8 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Mar 17 10:23:47 2019
+
+@author: Bhavuk
+"""
+
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Dropout
-from keras.layers import LSTM
+from keras.layers import CuDNNLSTM
 from keras.callbacks import ModelCheckpoint
 from keras.utils import np_utils
 import sys
@@ -43,18 +50,18 @@ y = np_utils.to_categorical(dataY)
 
 #Building the model
 model = Sequential()
-model.add(LSTM(256, input_shape=(X.shape[1], X.shape[2])))
+model.add(CuDNNLSTM(256, input_shape=(X.shape[1], X.shape[2])))
 model.add(Dropout(0.2))
 model.add(Dense(y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam')
 
 #define checkpoints
-#filepath = "weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
-#checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
-#callbacks_list = [checkpoint]
+filepath = "weights-improvement-100-1.7959.hdf5"
+checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
+callbacks_list = [checkpoint]
 
 #train model
-model.fit(X, y, epochs=1, batch_size=1024, callbacks=callbacks_list,validation_split=0.5)
+model.fit(X, y, epochs=1, batch_size=128, callbacks=callbacks_list,validation_split=0.2)
 
 #reverse mapping
 int_to_char = dict((i, c) for i, c in enumerate(chars))
@@ -66,7 +73,7 @@ pattern = dataX[start]
 print("Seed: ")
 print("\" ", ''.join([int_to_char[value] for value in pattern]), "\"")
 
-#generate text
+#generate text 
 for i in range(1000):
     x = np.reshape(pattern, (1, len(pattern), 1))
     x = x/float(n_vocab)
